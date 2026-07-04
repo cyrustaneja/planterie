@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+:root {
+  --pine: #2e6b5b;
+  --pine-deep: #1c4a3e;
+  --gold: #e0a63c;
+  --canvas: #fbfaf6;
+  --surface: #ffffff;
+  --ink: #1a1a17;
+  --sage: #6b7a72;
+  --slate: #5f6e72;
+  --line: #e6e2d8;
+}
+
+@theme inline {
+  --color-pine: var(--pine);
+  --color-pine-deep: var(--pine-deep);
+  --color-gold: var(--gold);
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-sage: var(--sage);
+  --color-slate: var(--slate);
+  --color-line: var(--line);
+
+  --font-display: var(--font-display);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
