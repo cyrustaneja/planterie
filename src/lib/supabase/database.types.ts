@@ -8,6 +8,108 @@ export type Database = {
   };
   public: {
     Tables: {
+      asset_tags: {
+        Row: {
+          asset_id: string;
+          tag_id: string;
+        };
+        Insert: {
+          asset_id: string;
+          tag_id: string;
+        };
+        Update: {
+          asset_id?: string;
+          tag_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "asset_tags_asset_id_fkey";
+            columns: ["asset_id"];
+            isOneToOne: false;
+            referencedRelation: "assets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "asset_tags_tag_id_fkey";
+            columns: ["tag_id"];
+            isOneToOne: false;
+            referencedRelation: "tags";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      assets: {
+        Row: {
+          asset_type: string;
+          batch_id: string | null;
+          caption: string | null;
+          created_at: string;
+          deleted_at: string | null;
+          height: number | null;
+          id: string;
+          mime: string;
+          size_bytes: number;
+          status: string;
+          storage_key: string;
+          taken_at: string | null;
+          thumbnail_key: string | null;
+          type: string;
+          uploaded_by: string | null;
+          width: number | null;
+        };
+        Insert: {
+          asset_type: string;
+          batch_id?: string | null;
+          caption?: string | null;
+          created_at?: string;
+          deleted_at?: string | null;
+          height?: number | null;
+          id?: string;
+          mime: string;
+          size_bytes: number;
+          status?: string;
+          storage_key: string;
+          taken_at?: string | null;
+          thumbnail_key?: string | null;
+          type: string;
+          uploaded_by?: string | null;
+          width?: number | null;
+        };
+        Update: {
+          asset_type?: string;
+          batch_id?: string | null;
+          caption?: string | null;
+          created_at?: string;
+          deleted_at?: string | null;
+          height?: number | null;
+          id?: string;
+          mime?: string;
+          size_bytes?: number;
+          status?: string;
+          storage_key?: string;
+          taken_at?: string | null;
+          thumbnail_key?: string | null;
+          type?: string;
+          uploaded_by?: string | null;
+          width?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "assets_batch_id_fkey";
+            columns: ["batch_id"];
+            isOneToOne: false;
+            referencedRelation: "batches";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "assets_uploaded_by_fkey";
+            columns: ["uploaded_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       audit_log: {
         Row: {
           action: string;
@@ -42,6 +144,192 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      batches: {
+        Row: {
+          asset_type: string;
+          created_at: string;
+          created_by: string | null;
+          event_date: string | null;
+          event_name: string | null;
+          id: string;
+          project_name: string | null;
+          purpose: string | null;
+        };
+        Insert: {
+          asset_type: string;
+          created_at?: string;
+          created_by?: string | null;
+          event_date?: string | null;
+          event_name?: string | null;
+          id?: string;
+          project_name?: string | null;
+          purpose?: string | null;
+        };
+        Update: {
+          asset_type?: string;
+          created_at?: string;
+          created_by?: string | null;
+          event_date?: string | null;
+          event_name?: string | null;
+          id?: string;
+          project_name?: string | null;
+          purpose?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "batches_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      catalog_plants: {
+        Row: {
+          active: boolean;
+          aliases: string[];
+          id: string;
+          name: string;
+        };
+        Insert: {
+          active?: boolean;
+          aliases?: string[];
+          id?: string;
+          name: string;
+        };
+        Update: {
+          active?: boolean;
+          aliases?: string[];
+          id?: string;
+          name?: string;
+        };
+        Relationships: [];
+      };
+      catalog_pots: {
+        Row: {
+          active: boolean;
+          aliases: string[];
+          id: string;
+          name: string;
+        };
+        Insert: {
+          active?: boolean;
+          aliases?: string[];
+          id?: string;
+          name: string;
+        };
+        Update: {
+          active?: boolean;
+          aliases?: string[];
+          id?: string;
+          name?: string;
+        };
+        Relationships: [];
+      };
+      jobs: {
+        Row: {
+          asset_id: string;
+          attempts: number;
+          created_at: string;
+          id: string;
+          kind: string;
+          last_error: string | null;
+          status: string;
+        };
+        Insert: {
+          asset_id: string;
+          attempts?: number;
+          created_at?: string;
+          id?: string;
+          kind: string;
+          last_error?: string | null;
+          status?: string;
+        };
+        Update: {
+          asset_id?: string;
+          attempts?: number;
+          created_at?: string;
+          id?: string;
+          kind?: string;
+          last_error?: string | null;
+          status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "jobs_asset_id_fkey";
+            columns: ["asset_id"];
+            isOneToOne: false;
+            referencedRelation: "assets";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      share_links: {
+        Row: {
+          asset_ids: string[];
+          created_at: string;
+          created_by: string | null;
+          expires_at: string;
+          id: string;
+          revoked: boolean;
+          token: string;
+        };
+        Insert: {
+          asset_ids: string[];
+          created_at?: string;
+          created_by?: string | null;
+          expires_at: string;
+          id?: string;
+          revoked?: boolean;
+          token: string;
+        };
+        Update: {
+          asset_ids?: string[];
+          created_at?: string;
+          created_by?: string | null;
+          expires_at?: string;
+          id?: string;
+          revoked?: boolean;
+          token?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "share_links_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      tags: {
+        Row: {
+          confidence: string | null;
+          id: string;
+          in_catalog: boolean;
+          key: string;
+          source: string;
+          value: string;
+        };
+        Insert: {
+          confidence?: string | null;
+          id?: string;
+          in_catalog?: boolean;
+          key: string;
+          source: string;
+          value: string;
+        };
+        Update: {
+          confidence?: string | null;
+          id?: string;
+          in_catalog?: boolean;
+          key?: string;
+          source?: string;
+          value?: string;
+        };
+        Relationships: [];
       };
       users: {
         Row: {

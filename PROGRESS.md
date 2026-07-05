@@ -22,16 +22,24 @@
   - Root layout shows a signed-in top bar (email + sign out); `/` calls `requireUser()` and is the authenticated landing page.
   - Vitest added (`npm run test`) — 7 unit tests covering `requireUser`/`requireAdmin` branch logic and `logAudit`'s failure-swallowing.
   - Verified end-to-end on the live URL: unauthenticated request → redirected to `/login`; real magic-link email → clicked → signed in; promoted to `admin` via the Supabase SQL editor → confirmed the UI reflects it.
+- **Milestone 3 (Data model + storage) complete, verified end-to-end:**
+  - Cloudflare R2 bucket `planterie-assets` created; R2 enabled on the account (required adding a payment method — a Cloudflare policy even for free-tier usage, not an actual cost at our volume).
+  - R2 API token (Access Key ID + Secret, scoped to Object Read & Write on this bucket only) minted from the dashboard and wired into `.env.local` + Cloudflare Worker secrets.
+  - `supabase/migrations/0002_assets_catalog_sharing.sql`: `catalog_plants`, `catalog_pots`, `batches`, `assets` (with soft-delete via `deleted_at`), `tags`, `asset_tags`, `share_links`, `jobs` — all per `PRD.md` Section 7. RLS enabled on all 8; `catalog_plants`/`catalog_pots`/`batches`/`assets`/`tags`/`asset_tags` are readable by any authenticated user with no client-write policies yet (Milestone 4's upload flow and Milestone 9's catalog management define those when they ship); `share_links`/`jobs` have no client policies at all (server-only, via the service-role client).
+  - Asset-type/category values are stored as snake_case identifiers (`website_product`, `stock_plants`, etc.) rather than the PRD's display labels ("Website / Product") — DB-friendly, mapped to display labels in the UI when that ships.
+  - `src/lib/storage/r2.ts` (S3 client, region `auto`) + `src/lib/storage/signed-url.ts` (`getSignedDownloadUrl`, `getSignedUploadUrl`) via `@aws-sdk/client-s3` + `@aws-sdk/s3-request-presigner` — Cloudflare's own documented approach for R2's S3-compatible API, no custom signing logic.
+  - `vitest.config.ts` now loads `.env.local` into `process.env` (Vitest doesn't do this automatically the way Next does) so tests importing `src/env.ts` don't need real secrets hardcoded.
+  - 2 new unit tests (mocking the presigner) + a one-off manual smoke test script (not committed) that did a real signed PUT + signed GET round-trip against the live bucket, then cleaned up the test object. 9 tests total, all passing.
 
 ## Next
 
-- **Milestone 3 — Data model + storage** (Cloudflare R2 wired up with signed URLs; `assets`/`batches`/`tags`/`asset_tags`/`catalog_plants`/`catalog_pots`/`share_links`/`jobs` tables).
+- **Milestone 4 — Upload + capture + queue** (drag/drop, camera capture, batch context sheet, HEIC/resize, upload queue with retries — proving nothing gets lost).
 
 ## Decisions
 
 - Hosting: Cloudflare Workers via `@opennextjs/cloudflare` (Vercel Hobby is non-commercial; Pro adds $20/user/mo). `next-on-pages` ruled out — no Next 16 support.
 - DB: Supabase Postgres.
-- Storage: Cloudflare R2 (private buckets, signed URLs, no egress fees) — not wired up yet (Milestone 3).
+- Storage: Cloudflare R2 (private bucket, signed URLs, no egress fees) — wired up and verified in Milestone 3.
 - Auth: Supabase Auth, **magic-link** sign-in (no passwords to manage/reset).
 - App runs on Cloudflare's `workers.dev` subdomain for now; a custom domain can be attached later without code changes.
 - **No middleware/proxy for route protection.** Next.js 16's `proxy` convention (renamed from `middleware`) always compiles to the Node.js runtime, and `@opennextjs/cloudflare` 1.20.1 doesn't yet support Node-runtime proxy (Cloudflare-side error: "Node.js middleware is not currently supported"). Route protection instead lives in each protected page/layout via `requireUser()`/`requireAdmin()` — same security guarantee, just enforced per-route instead of centrally. **Trade-off to revisit:** without middleware refreshing the Supabase session cookie on every request, a signed-in user's access token (default ~1hr TTL) may expire between Server Actions/Route Handlers (the only places that can refresh it), forcing an earlier-than-ideal re-login. Not a security bug — worst case is an extra sign-in prompt. Revisit if `@opennextjs/cloudflare` adds Node-runtime proxy support, or if this becomes a real annoyance.
