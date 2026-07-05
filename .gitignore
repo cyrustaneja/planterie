@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -39,6 +40,9 @@ yarn-error.log*
 # cloudflare
 .wrangler/
 .open-next/
+
+# supabase CLI local state
+supabase/.temp/
 
 # typescript
 *.tsbuildinfo
