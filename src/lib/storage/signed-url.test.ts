@@ -1,52 +1,64 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 
-const getSignedUrlMock = vi.fn();
+const signMock = vi.fn();
 
-vi.mock("@aws-sdk/s3-request-presigner", () => ({
-  getSignedUrl: getSignedUrlMock,
+vi.mock("@/lib/storage/r2", () => ({
+  r2: { sign: signMock },
+  bucketObjectUrl: (key: string) =>
+    new URL(`https://planterie-assets.example.r2.cloudflarestorage.com/${key}`),
 }));
 
-vi.mock("@/lib/storage/r2", () => ({ r2: {} }));
-
-const { getSignedDownloadUrl, getSignedUploadUrl } = await import("@/lib/storage/signed-url");
+const { getSignedDownloadUrl, getSignedUploadUrl, getSignedHeadUrl } =
+  await import("@/lib/storage/signed-url");
 
 describe("getSignedDownloadUrl", () => {
   beforeEach(() => {
-    getSignedUrlMock.mockReset();
+    signMock.mockReset();
   });
 
-  it("requests a GET presign for the given key with the configured bucket", async () => {
-    getSignedUrlMock.mockResolvedValue("https://example.com/signed-get");
+  it("signs a GET request for the given key with the requested expiry", async () => {
+    signMock.mockResolvedValue({ url: "https://example.com/signed-get" });
 
     const url = await getSignedDownloadUrl("assets/photo.jpg", 60);
 
     expect(url).toBe("https://example.com/signed-get");
-    const [, command, options] = getSignedUrlMock.mock.calls[0];
-    expect(command).toBeInstanceOf(GetObjectCommand);
-    expect(command.input).toEqual({ Bucket: "planterie-assets", Key: "assets/photo.jpg" });
-    expect(options).toEqual({ expiresIn: 60 });
+    const [signedUrl, options] = signMock.mock.calls[0];
+    expect(signedUrl).toBe(
+      "https://planterie-assets.example.r2.cloudflarestorage.com/assets/photo.jpg?X-Amz-Expires=60",
+    );
+    expect(options).toEqual({ method: "GET", aws: { signQuery: true } });
   });
 });
 
 describe("getSignedUploadUrl", () => {
   beforeEach(() => {
-    getSignedUrlMock.mockReset();
+    signMock.mockReset();
   });
 
-  it("requests a PUT presign with the given key and content type", async () => {
-    getSignedUrlMock.mockResolvedValue("https://example.com/signed-put");
+  it("signs a PUT request for the given key", async () => {
+    signMock.mockResolvedValue({ url: "https://example.com/signed-put" });
 
-    const url = await getSignedUploadUrl("assets/photo.jpg", "image/jpeg", 120);
+    const url = await getSignedUploadUrl("assets/photo.jpg", 120);
 
     expect(url).toBe("https://example.com/signed-put");
-    const [, command, options] = getSignedUrlMock.mock.calls[0];
-    expect(command).toBeInstanceOf(PutObjectCommand);
-    expect(command.input).toEqual({
-      Bucket: "planterie-assets",
-      Key: "assets/photo.jpg",
-      ContentType: "image/jpeg",
-    });
-    expect(options).toEqual({ expiresIn: 120 });
+    const [signedUrl, options] = signMock.mock.calls[0];
+    expect(signedUrl).toContain("X-Amz-Expires=120");
+    expect(options).toEqual({ method: "PUT", aws: { signQuery: true } });
+  });
+});
+
+describe("getSignedHeadUrl", () => {
+  beforeEach(() => {
+    signMock.mockReset();
+  });
+
+  it("signs a HEAD request for the given key", async () => {
+    signMock.mockResolvedValue({ url: "https://example.com/signed-head" });
+
+    const url = await getSignedHeadUrl("assets/photo.jpg", 60);
+
+    expect(url).toBe("https://example.com/signed-head");
+    const [, options] = signMock.mock.calls[0];
+    expect(options).toEqual({ method: "HEAD", aws: { signQuery: true } });
   });
 });

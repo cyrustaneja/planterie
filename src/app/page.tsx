@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 
 export default async function Home() {
@@ -9,9 +10,9 @@ export default async function Home() {
       <p className="max-w-md text-sage">
         Signed in as <span className="font-mono text-pine">{user.email}</span> ({user.role}).
       </p>
-      <code className="rounded border border-line bg-surface px-3 py-1 font-mono text-sm text-pine">
-        scaffold ready
-      </code>
+      <Link href="/upload" className="rounded bg-pine px-4 py-2 font-medium text-canvas">
+        Add photos
+      </Link>
     </main>
   );
 }

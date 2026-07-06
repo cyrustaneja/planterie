@@ -5,7 +5,6 @@ import { publicEnv } from "@/env";
 import type { Database } from "./database.types";
 
 // For use in Server Components, Server Actions, and Route Handlers.
-// Session cookie refresh happens in src/middleware.ts.
 export async function createClient() {
   const cookieStore = await cookies();
 
